@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar color="#1976D2" dark flat app class="custom-navbar">
+  <v-app-bar color="#01579B" dark flat app class="custom-navbar">
     <v-app-bar-nav-icon @click="$emit('toggle-sidebar')" />
     <v-icon class="ml-2">mdi-bullhorn-outline</v-icon>
     <v-toolbar-title class="ml-2">Новости</v-toolbar-title>

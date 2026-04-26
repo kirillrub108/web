@@ -3,7 +3,7 @@
     <NavBar @toggle-sidebar="toggleSidebar" />
     <SideBar v-model="sidebarOpen" />
     <v-main>
-      <v-container fluid>
+      <v-container fluid class="pa-8">
         <router-view />
       </v-container>
     </v-main>
