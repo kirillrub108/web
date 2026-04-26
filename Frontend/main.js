@@ -13,10 +13,12 @@ import { ru } from 'vuetify/locale';
 
 import IconFire from './src/components/icons/IconFire.vue';
 import IconHome from './src/components/icons/IconHome.vue';
+import IconMegaphone from './src/components/icons/IconMegaphone.vue';
 
 const customSvgNameToComponent = {
   fire: IconFire,
   home: IconHome,
+  megaphone: IconMegaphone,
 };
 
 const custom = {
