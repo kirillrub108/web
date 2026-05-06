@@ -2,6 +2,7 @@ import { createApp, h } from 'vue';
 import App from './App.vue';
 import router from './src/router';
 import '@mdi/font/css/materialdesignicons.css';
+import { LoginService, UserService } from './src/plugins/api/services';
 
 // Vuetify
 import 'vuetify/styles';
@@ -43,4 +44,9 @@ const vuetify = createVuetify({
   }
 });
 
-createApp(App).use(router).use(vuetify).mount('#app');
+const app = createApp(App);
+
+// Регистрируем сервисы как глобальные свойства
+app.config.globalProperties.$api = { LoginService, UserService };
+
+app.use(router).use(vuetify).mount('#app');

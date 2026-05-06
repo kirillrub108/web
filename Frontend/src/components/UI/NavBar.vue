@@ -16,24 +16,90 @@
       style="max-width: 300px;"
       bg-color="transparent"
     />
-    <v-menu>
+
+    <!-- Кнопка Войти (если пользователь не авторизован) -->
+    <v-btn
+      v-if="!currentUser"
+      variant="outlined"
+      class="text-none mr-2"
+      style="color: white; border-color: rgba(255,255,255,0.6);"
+      @click="showAuthDialog = true"
+    >
+      Войти
+    </v-btn>
+
+    <!-- Меню пользователя (если авторизован) -->
+    <v-menu v-else>
       <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" variant="text" append-icon="mdi-chevron-down" class="text-none" style="color: white;">
-          Иванов А.А.
+        <v-btn
+          v-bind="props"
+          variant="text"
+          append-icon="mdi-chevron-down"
+          class="text-none"
+          style="color: white;"
+        >
+          {{ userDisplayName }}
         </v-btn>
       </template>
       <v-list>
         <v-list-item title="Профиль" />
-        <v-list-item title="Выйти" />
+        <v-list-item title="Выйти" @click="logout" />
       </v-list>
     </v-menu>
+
+    <!-- Диалог авторизации -->
+    <AuthDialog v-model="showAuthDialog" @login-success="onLoginSuccess" />
   </v-app-bar>
 </template>
 
 <script>
+import AuthDialog from '../AuthDialog.vue';
+import { UserService } from '../../plugins/api/services';
+
 export default {
   name: 'NavBar',
+  components: { AuthDialog },
   emits: ['toggle-sidebar'],
+  data() {
+    return {
+      showAuthDialog: false,
+      currentUser: null,
+    };
+  },
+  computed: {
+    userDisplayName() {
+      if (!this.currentUser) return '';
+      const f = this.currentUser.fields || this.currentUser;
+      const surname = f.Surname || '';
+      const name = f.Name ? f.Name[0] + '.' : '';
+      const patronymic = f.Patronymic ? f.Patronymic[0] + '.' : '';
+      return `${surname} ${name}${patronymic}`.trim();
+    },
+  },
+  async mounted() {
+    // При обновлении страницы проверяем sessionStorage
+    const userId = sessionStorage.getItem('userId');
+    if (userId) {
+      try {
+        const user = await UserService.getCurrentUser(userId);
+        this.currentUser = user;
+      } catch (e) {
+        console.error('Не удалось загрузить пользователя:', e);
+        sessionStorage.removeItem('recordId');
+        sessionStorage.removeItem('userId');
+      }
+    }
+  },
+  methods: {
+    onLoginSuccess(user) {
+      this.currentUser = user;
+    },
+    logout() {
+      sessionStorage.removeItem('recordId');
+      sessionStorage.removeItem('userId');
+      this.currentUser = null;
+    },
+  },
 };
 </script>
 
