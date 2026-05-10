@@ -48,13 +48,14 @@
     </v-menu>
 
     <!-- Диалог авторизации -->
-    <AuthDialog v-model="showAuthDialog" @login-success="onLoginSuccess" />
+    <AuthDialog v-model="showAuthDialog" @login-success="showAuthDialog = false" />
   </v-app-bar>
 </template>
 
 <script>
+import { mapState, mapActions } from 'pinia';
+import { useUserStore } from '../../store/UserStore';
 import AuthDialog from '../AuthDialog.vue';
-import { UserService } from '../../plugins/api/services';
 
 export default {
   name: 'NavBar',
@@ -63,10 +64,11 @@ export default {
   data() {
     return {
       showAuthDialog: false,
-      currentUser: null,
     };
   },
   computed: {
+    ...mapState(useUserStore, ['currentUser']),
+
     userDisplayName() {
       if (!this.currentUser) return '';
       const f = this.currentUser.fields || this.currentUser;
@@ -77,12 +79,11 @@ export default {
     },
   },
   async mounted() {
-    // При обновлении страницы проверяем sessionStorage
+    // При обновлении страницы восстанавливаем пользователя из sessionStorage
     const userId = sessionStorage.getItem('userId');
     if (userId) {
       try {
-        const user = await UserService.getCurrentUser(userId);
-        this.currentUser = user;
+        await this.getCurrentUser(userId);
       } catch (e) {
         console.error('Не удалось загрузить пользователя:', e);
         sessionStorage.removeItem('recordId');
@@ -91,14 +92,7 @@ export default {
     }
   },
   methods: {
-    onLoginSuccess(user) {
-      this.currentUser = user;
-    },
-    logout() {
-      sessionStorage.removeItem('recordId');
-      sessionStorage.removeItem('userId');
-      this.currentUser = null;
-    },
+    ...mapActions(useUserStore, ['logout', 'getCurrentUser']),
   },
 };
 </script>

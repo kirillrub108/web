@@ -1,4 +1,5 @@
 import { createApp, h } from 'vue';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './src/router';
 import '@mdi/font/css/materialdesignicons.css';
@@ -44,9 +45,10 @@ const vuetify = createVuetify({
   }
 });
 
+const pinia = createPinia();
 const app = createApp(App);
 
 // Регистрируем сервисы как глобальные свойства
 app.config.globalProperties.$api = { LoginService, UserService };
 
-app.use(router).use(vuetify).mount('#app');
+app.use(pinia).use(router).use(vuetify).mount('#app');

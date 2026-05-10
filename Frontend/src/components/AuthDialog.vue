@@ -1,48 +1,122 @@
 <template>
-  <v-dialog v-model="dialog" max-width="400" persistent>
+  <v-dialog v-model="dialog" max-width="420" persistent>
     <v-card>
-      <v-card-title class="text-h6 pa-6 pb-2">Авторизация</v-card-title>
-      <v-card-text class="pa-6 pt-2">
-        <v-text-field
-          v-model="email"
-          label="Email"
-          type="email"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          hide-details="auto"
-        />
-        <v-text-field
-          v-model="password"
-          label="Пароль"
-          type="password"
-          variant="outlined"
-          density="compact"
-          hide-details="auto"
-        />
-        <div v-if="errorMessage" class="text-red mt-3 text-body-2">
-          {{ errorMessage }}
-        </div>
-      </v-card-text>
-      <v-card-actions class="pa-6 pt-0">
-        <v-spacer />
-        <v-btn variant="text" @click="close">Отмена</v-btn>
-        <v-btn
-          color="#1976D2"
-          variant="flat"
-          :loading="loading"
-          class="text-none"
-          @click="handleLogin"
-        >
-          Войти
-        </v-btn>
-      </v-card-actions>
+      <!-- Вкладки -->
+      <v-tabs v-model="activeTab" color="#1976D2" grow>
+        <v-tab value="login">Войти</v-tab>
+        <v-tab value="register">Регистрация</v-tab>
+      </v-tabs>
+
+      <v-tabs-window v-model="activeTab">
+        <!-- ─── Вкладка: Войти ─── -->
+        <v-tabs-window-item value="login">
+          <v-card-text class="pa-6 pb-2">
+            <v-text-field
+              v-model="loginForm.email"
+              label="Email"
+              type="email"
+              variant="outlined"
+              density="compact"
+              class="mb-3"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="loginForm.password"
+              label="Пароль"
+              type="password"
+              variant="outlined"
+              density="compact"
+              hide-details="auto"
+            />
+            <div v-if="errorMessage" class="text-red mt-3 text-body-2">
+              {{ errorMessage }}
+            </div>
+          </v-card-text>
+          <v-card-actions class="pa-6 pt-2">
+            <v-spacer />
+            <v-btn variant="text" @click="close">Отмена</v-btn>
+            <v-btn
+              color="#1976D2"
+              variant="flat"
+              :loading="loading"
+              class="text-none"
+              @click="handleLogin"
+            >
+              Войти
+            </v-btn>
+          </v-card-actions>
+        </v-tabs-window-item>
+
+        <!-- ─── Вкладка: Регистрация ─── -->
+        <v-tabs-window-item value="register">
+          <v-card-text class="pa-6 pb-2">
+            <v-text-field
+              v-model="registerForm.name"
+              label="Имя"
+              variant="outlined"
+              density="compact"
+              class="mb-3"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="registerForm.surname"
+              label="Фамилия"
+              variant="outlined"
+              density="compact"
+              class="mb-3"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="registerForm.patronymic"
+              label="Отчество (необязательно)"
+              variant="outlined"
+              density="compact"
+              class="mb-3"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="registerForm.email"
+              label="Email"
+              type="email"
+              variant="outlined"
+              density="compact"
+              class="mb-3"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="registerForm.password"
+              label="Пароль"
+              type="password"
+              variant="outlined"
+              density="compact"
+              hide-details="auto"
+            />
+            <div v-if="errorMessage" class="text-red mt-3 text-body-2">
+              {{ errorMessage }}
+            </div>
+          </v-card-text>
+          <v-card-actions class="pa-6 pt-2">
+            <v-spacer />
+            <v-btn variant="text" @click="close">Отмена</v-btn>
+            <v-btn
+              color="#1976D2"
+              variant="flat"
+              :loading="loading"
+              class="text-none"
+              @click="handleRegister"
+            >
+              Зарегистрироваться
+            </v-btn>
+          </v-card-actions>
+        </v-tabs-window-item>
+      </v-tabs-window>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
-import { LoginService, UserService } from '../plugins/api/services';
+import { mapActions } from 'pinia';
+import { useUserStore } from '../store/UserStore';
 
 export default {
   name: 'AuthDialog',
@@ -55,10 +129,20 @@ export default {
   emits: ['update:modelValue', 'login-success'],
   data() {
     return {
-      email: '',
-      password: '',
+      activeTab: 'login',
       loading: false,
       errorMessage: '',
+      loginForm: {
+        email: '',
+        password: '',
+      },
+      registerForm: {
+        name: '',
+        surname: '',
+        patronymic: '',
+        email: '',
+        password: '',
+      },
     };
   },
   computed: {
@@ -72,32 +156,39 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useUserStore, ['authorizeUser', 'registerUser']),
+
     close() {
-      this.email = '';
-      this.password = '';
+      this.loginForm = { email: '', password: '' };
+      this.registerForm = { name: '', surname: '', patronymic: '', email: '', password: '' };
       this.errorMessage = '';
+      this.activeTab = 'login';
       this.dialog = false;
     },
+
     async handleLogin() {
       this.errorMessage = '';
       this.loading = true;
       try {
-        const response = await LoginService.login(this.email, this.password);
-
-        // Сохраняем recordId в sessionStorage (задание)
-        sessionStorage.setItem('recordId', response.recordId);
-        sessionStorage.setItem('userId', response.userId);
-
-        // Получаем данные текущего пользователя
-        const user = await UserService.getCurrentUser(response.userId);
-
-        console.log('Авторизация успешна:', user);
-
-        this.$emit('login-success', user);
+        await this.authorizeUser(this.loginForm.email, this.loginForm.password);
+        this.$emit('login-success');
         this.close();
       } catch (error) {
-        this.errorMessage =
-          error.response?.data?.error || 'Ошибка авторизации';
+        this.errorMessage = error.response?.data?.error || 'Ошибка авторизации';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async handleRegister() {
+      this.errorMessage = '';
+      this.loading = true;
+      try {
+        await this.registerUser(this.registerForm);
+        this.$emit('login-success');
+        this.close();
+      } catch (error) {
+        this.errorMessage = error.response?.data?.error || 'Ошибка регистрации';
       } finally {
         this.loading = false;
       }

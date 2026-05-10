@@ -51,4 +51,62 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { login };
+// Регистрация нового пользователя
+const register = async (req, res) => {
+  try {
+    const { name, surname, patronymic, email, password } = req.body;
+
+    // Проверяем обязательные поля
+    if (!name || !surname || !email || !password) {
+      return res.status(400).json({ error: 'Заполните все обязательные поля' });
+    }
+
+    // 1. Создаём запись в таблице Users
+    const userTableId = process.env.USER_TABLE_ID;
+    const userResponse = await tableService.post(userTableId, [
+      {
+        fields: {
+          Name: name,
+          Surname: surname,
+          Patronymic: patronymic || '',
+        },
+      },
+    ]);
+
+    const userRecord = userResponse.data?.records?.[0];
+    if (!userRecord) {
+      return res.status(500).json({ error: 'Не удалось создать пользователя' });
+    }
+
+    const userId = userRecord.recordId;
+    console.log('[Register] Создан пользователь:', userId);
+
+    // 2. Создаём запись в таблице Login, привязываем UserId
+    const loginResponse = await tableService.post(LOGIN_TABLE_ID, [
+      {
+        fields: {
+          Email: email,
+          Password: password,
+          UserId: [userId],
+        },
+      },
+    ]);
+
+    const loginRecord = loginResponse.data?.records?.[0];
+    if (!loginRecord) {
+      return res.status(500).json({ error: 'Не удалось создать запись входа' });
+    }
+
+    console.log('[Register] Создана запись входа:', loginRecord.recordId);
+
+    res.json({
+      recordId: loginRecord.recordId,
+      userId,
+    });
+  } catch (error) {
+    console.error('[Register] Ошибка:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { login, register };
