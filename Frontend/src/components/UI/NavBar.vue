@@ -72,9 +72,10 @@ export default {
     userDisplayName() {
       if (!this.currentUser) return '';
       const f = this.currentUser.fields || this.currentUser;
-      const surname = f.Surname || '';
-      const name = f.Name ? f.Name[0] + '.' : '';
-      const patronymic = f.Patronymic ? f.Patronymic[0] + '.' : '';
+      const capitalize = s => s ? s[0].toUpperCase() + s.slice(1) : '';
+      const surname = capitalize(f.Surname || '');
+      const name = f.Name ? f.Name[0].toUpperCase() + '.' : '';
+      const patronymic = f.Patronymic ? f.Patronymic[0].toUpperCase() + '.' : '';
       return `${surname} ${name}${patronymic}`.trim();
     },
   },
