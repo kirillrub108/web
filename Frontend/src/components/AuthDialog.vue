@@ -57,6 +57,9 @@
               density="compact"
               class="mb-3"
               hide-details="auto"
+              :error="!!registerErrors.name"
+              :error-messages="registerErrors.name"
+              @update:model-value="registerErrors.name = ''"
             />
             <v-text-field
               v-model="registerForm.surname"
@@ -65,6 +68,9 @@
               density="compact"
               class="mb-3"
               hide-details="auto"
+              :error="!!registerErrors.surname"
+              :error-messages="registerErrors.surname"
+              @update:model-value="registerErrors.surname = ''"
             />
             <v-text-field
               v-model="registerForm.patronymic"
@@ -82,6 +88,9 @@
               density="compact"
               class="mb-3"
               hide-details="auto"
+              :error="!!registerErrors.email"
+              :error-messages="registerErrors.email"
+              @update:model-value="registerErrors.email = ''"
             />
             <v-text-field
               v-model="registerForm.password"
@@ -90,6 +99,9 @@
               variant="outlined"
               density="compact"
               hide-details="auto"
+              :error="!!registerErrors.password"
+              :error-messages="registerErrors.password"
+              @update:model-value="registerErrors.password = ''"
             />
             <div v-if="errorMessage" class="text-red mt-3 text-body-2">
               {{ errorMessage }}
@@ -143,6 +155,12 @@ export default {
         email: '',
         password: '',
       },
+      registerErrors: {
+        name: '',
+        surname: '',
+        email: '',
+        password: '',
+      },
     };
   },
   computed: {
@@ -161,6 +179,7 @@ export default {
     close() {
       this.loginForm = { email: '', password: '' };
       this.registerForm = { name: '', surname: '', patronymic: '', email: '', password: '' };
+      this.registerErrors = { name: '', surname: '', email: '', password: '' };
       this.errorMessage = '';
       this.activeTab = 'login';
       this.dialog = false;
@@ -180,8 +199,24 @@ export default {
       }
     },
 
+    validateRegister() {
+      const f = this.registerForm;
+      const e = { name: '', surname: '', email: '', password: '' };
+      if (!f.name.trim()) e.name = 'Поле обязательно для заполнения';
+      if (!f.surname.trim()) e.surname = 'Поле обязательно для заполнения';
+      if (!f.email.trim()) {
+        e.email = 'Поле обязательно для заполнения';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) {
+        e.email = 'Введите корректный email';
+      }
+      if (!f.password.trim()) e.password = 'Поле обязательно для заполнения';
+      this.registerErrors = e;
+      return !e.name && !e.surname && !e.email && !e.password;
+    },
+
     async handleRegister() {
       this.errorMessage = '';
+      if (!this.validateRegister()) return;
       this.loading = true;
       try {
         await this.registerUser(this.registerForm);
