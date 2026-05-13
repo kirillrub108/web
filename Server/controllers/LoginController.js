@@ -7,23 +7,17 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Получаем ВСЕ записи таблицы Login и фильтруем вручную
-    const data = await tableService.get(LOGIN_TABLE_ID);
+    const data = await tableService.get(LOGIN_TABLE_ID, {
+      filterByFormula: `AND({Email}="${email}",{Password}="${password}")`,
+    });
 
-    // Дебаг: смотрим структуру первой записи
-    const allRecords = data.data?.records || [];
-    if (allRecords.length > 0) {
-      console.log('[Login] Пример записи:', JSON.stringify(allRecords[0], null, 2));
-    }
+    const records = data.data?.records || [];
 
-    const record = allRecords.find(
-      (r) => r.fields?.Email === email && r.fields?.Password === password
-    );
-
-    if (!record) {
+    if (records.length === 0) {
       return res.status(401).json({ error: 'Неверный email или пароль' });
     }
 
+    const record = records[0];
     console.log('[Login] Найдена запись:', JSON.stringify(record, null, 2));
 
     // UserId — поле-ссылка: может быть массивом объектов [{recordId, title}]
