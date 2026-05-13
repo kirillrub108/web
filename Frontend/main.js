@@ -15,6 +15,14 @@ import IconFire from './src/components/icons/IconFire.vue';
 import IconHome from './src/components/icons/IconHome.vue';
 import IconMegaphone from './src/components/icons/IconMegaphone.vue';
 
+// Форматирование дат с помощью dayjs
+import dayjs from 'dayjs'
+import 'dayjs/locale/ru'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+
+dayjs.extend(customParseFormat)
+dayjs.locale('ru')
+
 const customSvgNameToComponent = {
   fire: IconFire,
   home: IconHome,
